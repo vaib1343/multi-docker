@@ -1,0 +1,21 @@
+sudo: required
+language: generic
+services: 
+  - docker
+
+before_install:
+  - docker build -t vaib1343/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true vaib1343/react-test npm run test -- --coverage
+
+after-success:
+  - docker build -t vaib1343/multi-client ./client 
+  - docker build -t vaib1343/multi-nginx ./nginx
+  - docker build -t vaib1343/multi-server ./server
+  - docker build -t vaib1343/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push vaib1343/multi-client
+  - docker push vaib1343/multi-nginx
+  - docker push vaib1343/multi-server
+  - docker push vaib1343/multi-worker
